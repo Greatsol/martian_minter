@@ -4,7 +4,7 @@
 import json
 from random import randint
 
-from aptos_sdk.account import Account
+from aptos_sdk.account import Account, AccountAddress
 from aptos_sdk.bcs import Serializer
 from aptos_sdk.client import RestClient
 from aptos_sdk.transactions import (EntryFunction, TransactionArgument,
@@ -77,6 +77,7 @@ def wait_for_transaction(txn: str) -> None:
     rest_client.wait_for_transaction(txn)
 
 
+@retry(stop=stop_after_attempt(3))
 def create_account(account: Account, target_acc: Account) -> str:
     """Create wallet without faucet."""
 
@@ -99,11 +100,15 @@ def disperse_apt_to_wallets(main_acc: Account, target_wallets: list[Account]) ->
 
     amount = 0.15
     for wallet in target_wallets:
-        txn = rest_client.transfer(
-            main_acc, wallet.address(), convert_apt_to_wei(amount)
-        )
+        txn = transfer(main_acc, wallet.address(), amount)
         wait_for_transaction(txn)
         logger.info(f"Transfer {amount} APT to {wallet.address()}")
+
+
+@retry(stop=stop_after_attempt(3))
+def transfer(main_acc: Account, target_wallet: AccountAddress, amount: float | int) -> str:
+    """Safe transfer apt."""
+    return transfer(main_acc, target_wallet, convert_apt_to_wei(amount))
 
 
 def convert_apt_to_wei(amount: float | int) -> int:
@@ -118,7 +123,8 @@ def mint_martian_nft(account: Account):
     name = randint(11111, 99999)
     txn = create_testnet_collection(account, name)
     wait_for_transaction(txn)
-    logger.info(f"Create collection number {name} for address {account.address()}")
+    logger.info(
+        f"Create collection number {name} for address {account.address()}")
 
     txn = create_testnet_nft(account, name)
     wait_for_transaction(txn)
@@ -135,7 +141,8 @@ def create_testnet_collection(account: Account, name: int) -> str:
         TransactionArgument("https://aptos.dev", Serializer.str),
         TransactionArgument(9007199254740991, Serializer.u64),
         TransactionArgument(
-            [False, False, False], Serializer.sequence_serializer(Serializer.bool)
+            [False, False, False], Serializer.sequence_serializer(
+                Serializer.bool)
         ),
     ]
 
@@ -173,9 +180,12 @@ def create_testnet_nft(account: Account, name: int) -> str:
             [False, False, False, False, False],
             Serializer.sequence_serializer(Serializer.bool),
         ),
-        TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
-        TransactionArgument([], Serializer.sequence_serializer(Serializer.bytes)),
-        TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
+        TransactionArgument(
+            [], Serializer.sequence_serializer(Serializer.str)),
+        TransactionArgument(
+            [], Serializer.sequence_serializer(Serializer.bytes)),
+        TransactionArgument(
+            [], Serializer.sequence_serializer(Serializer.str)),
     ]
 
     payload = EntryFunction.natural(
