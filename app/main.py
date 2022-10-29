@@ -2,6 +2,7 @@
 
 
 import json
+from multiprocessing.connection import wait
 from random import randint
 
 from aptos_sdk.account import Account, AccountAddress
@@ -12,6 +13,7 @@ from aptos_sdk.transactions import (EntryFunction, TransactionArgument,
 from loguru import logger
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
+from tenacity.wait import wait_fixed
 
 from app.config import (EXIST_WALLETS, MAIN_PRIVATE_KEY, TESTNET_URL,
                         WALLETS_AMOUNT)
@@ -70,14 +72,14 @@ def load_wallets() -> list[Account]:
     return wallets
 
 
-@retry(stop=stop_after_attempt(3))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def wait_for_transaction(txn: str) -> None:
     """Wrapped RestClient.wait_for_transaction."""
 
     rest_client.wait_for_transaction(txn)
 
 
-@retry(stop=stop_after_attempt(3))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def create_account(account: Account, target_acc: Account) -> str:
     """Create wallet without faucet."""
 
@@ -105,10 +107,10 @@ def disperse_apt_to_wallets(main_acc: Account, target_wallets: list[Account]) ->
         logger.info(f"Transfer {amount} APT to {wallet.address()}")
 
 
-@retry(stop=stop_after_attempt(3))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def transfer(main_acc: Account, target_wallet: AccountAddress, amount: float | int) -> str:
     """Safe transfer apt."""
-    return transfer(main_acc, target_wallet, convert_apt_to_wei(amount))
+    return rest_client.transfer(main_acc, target_wallet, convert_apt_to_wei(amount))
 
 
 def convert_apt_to_wei(amount: float | int) -> int:
@@ -131,7 +133,7 @@ def mint_martian_nft(account: Account):
     logger.success(f"Mint nft number {name} for address {account.address()}")
 
 
-@retry(stop=stop_after_attempt(3))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def create_testnet_collection(account: Account, name: int) -> str:
     """Creates a new collection by number within the specified account."""
 
@@ -159,7 +161,7 @@ def create_testnet_collection(account: Account, name: int) -> str:
     return rest_client.submit_bcs_transaction(signed_transaction)
 
 
-@retry(stop=stop_after_attempt(3))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def create_testnet_nft(account: Account, name: int) -> str:
     """Creates a Martian NFT."""
 
