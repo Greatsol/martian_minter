@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "martian-minter"
+version = "0.1.0"
+description = "Minter for Martian testnet nft"
+authors = ["Dev <https://t.me/python_web3>"]
+readme = "README.md"
+packages = [{include = "martian_minter"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+loguru = "^0.6.0"
+aptos-sdk = "^0.4.1"
+python-dotenv = "^0.21.0"
+tenacity = "^8.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
