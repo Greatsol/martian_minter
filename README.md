@@ -1,6 +1,6 @@
 # martian_minter | Dev: [@python_web3](https://t.me/python_web3)
 Martian Testnet NFT minter. \
-Разработан 
+Разработан [@python_web3](https://t.me/python_web3)
 
 ## Установка зависимостей
 Для работы скрипт нужен [python3.10](https://www.python.org/) или выше.
